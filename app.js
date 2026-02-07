@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { Server } from 'socket.io';
 import http from 'http';
+import { generateToken } from './src/middlewares/authmiddleware.js';
 
 // dotenv config
 dotenv.config();
@@ -24,13 +25,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
+    console.log(generateToken({user: 'yuwa'}));
     res.sendFile(path.join(__dirname, 'public', 'html', 'landingpage.html'));
 });
+
+
 
 io.on('connection', (socket) => {
   console.log('a user connected');
    socket.on('chat message', (msg) => {
-    console.log('message: ' + msg);
     io.emit('chat message', msg);
   });
   socket.on('disconnect', () => {
