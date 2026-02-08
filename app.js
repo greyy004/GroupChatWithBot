@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { Server } from 'socket.io';
 import http from 'http';
-import { generateToken } from './src/middlewares/authmiddleware.js';
+import { authRoutes }from './src/routes/authRoutes.js';
 
 // dotenv config
 dotenv.config();
@@ -25,11 +25,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
-    console.log(generateToken({user: 'yuwa'}));
     res.sendFile(path.join(__dirname, 'public', 'html', 'landingpage.html'));
 });
 
-
+app.use('/auth', authRoutes);
 
 io.on('connection', (socket) => {
   console.log('a user connected');
@@ -40,6 +39,7 @@ io.on('connection', (socket) => {
     console.log('user disconnected');
   });
 });
+
 // Start server
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
