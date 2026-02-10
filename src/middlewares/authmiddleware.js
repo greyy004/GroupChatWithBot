@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { } from '../models/userModel.js';
+import {getUserByEmail } from '../models/userModel.js';
 
 export const authRegister =async (req, res, next) => {
     const { firstname, lastname, email, password, confirm_password } = req.body;
@@ -40,7 +40,7 @@ export const authRegister =async (req, res, next) => {
 
 export const authLogin = (req, res, next) => {
     const { email, password } = req.body;
-    if (!email || password) {
+    if (!email || !password) {
         return res.status(400).json({ message: "Please fill all the fields" });
     }
     if (!/^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/.test(email)) {

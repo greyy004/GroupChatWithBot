@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { Server } from 'socket.io';
 import http from 'http';
-import { authRoutes }from './src/routes/authRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+import { initdb } from './src/configs/initdb.js';
 
 // dotenv config
 dotenv.config();
@@ -12,11 +13,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+await initdb();
 // Create HTTP server from Express app
 const server = http.createServer(app);
 
 // Attach Socket.IO to the server
 const io = new Server(server);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Import static files
 const __filename = fileURLToPath(import.meta.url);

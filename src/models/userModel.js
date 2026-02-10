@@ -13,11 +13,21 @@ export const createUserTable = async () => {
     return user;
 };
 
+export const createUser = async (firstname, lastname, email, hashed_password) => {
+    const result = await pool.query(
+        `INSERT INTO users (firstname, lastname, email, hashed_password)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, firstname, lastname, email`,
+        [firstname, lastname, email, hashed_password]
+    );
 
-export const  createUser= async (firstname, lastname, email, hashed_password) => {
-    const result = await pool.query(`
-    insert into users (
-        firstname, lastname, email, hashed_password) values ($1,$2,$3,$4)`,
-        [firstname, lastname, email, hashed_password]);
     return result.rows[0];
+};
+
+
+export const getUserByEmail = async (email)=>{
+    const user = await pool.query (
+        ` select id from users where email = $1`, [email]
+    );
+    return user.rows[0];
 };

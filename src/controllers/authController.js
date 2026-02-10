@@ -1,9 +1,9 @@
-import { createUser} from "../models/userModel";
-import {bcrypt} from 'bcrypt';
+import { createUser} from "../models/userModel.js";
+import bcrypt from 'bcrypt';
 
 export const userRegister=async(req, res)=>{
     const{ firstname, lastname, email, password, confirm_password } = req.body;
-    const hashed_password= await bcrypt.hash(password, hashed_password);
+    const hashed_password= await bcrypt.hash(password, 10);
     try {
         const user= await createUser(firstname, lastname, email, hashed_password);
         return res.status(200).json({success: true, message: "user created successfully"});
