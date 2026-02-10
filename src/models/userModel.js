@@ -24,10 +24,16 @@ export const createUser = async (firstname, lastname, email, hashed_password) =>
     return result.rows[0];
 };
 
-
 export const getUserByEmail = async (email)=>{
     const user = await pool.query (
-        ` select id, email, hashed_password from users where email = $1`, [email]
+        ` select id, firstname, lastname, email, hashed_password from users where email = $1`, [email]
+    );
+    return user.rows[0];
+};
+
+export const getUserById = async (id)=>{
+    const user = await pool.query (
+        ` select firstname, lastname, email from users where id = $1`, [id]
     );
     return user.rows[0];
 };

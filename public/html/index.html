@@ -1,153 +1,494 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Socket.IO chat</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
 
-      body { 
-        margin: 0; 
-        padding-bottom: 80px; 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-      }
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Socket.IO Chat</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-      #form { 
-        background: rgba(255, 255, 255, 0.95);
-        padding: 1rem; 
-        position: fixed; 
-        bottom: 0; 
-        left: 0; 
-        right: 0; 
-        display: flex; 
-        gap: 0.75rem;
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
 
-      #input { 
-        border: 2px solid #e0e0e0;
-        padding: 0.75rem 1.25rem; 
-        flex-grow: 1; 
-        border-radius: 24px;
-        font-size: 15px;
-        transition: all 0.2s ease;
-        background: white;
-      }
+    /* Animated Background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
 
-      #input:focus { 
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
+    .bg-animation::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      top: -250px;
+      right: -250px;
+      animation: float 20s infinite ease-in-out;
+    }
 
-      #form > button { 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none; 
-        padding: 0.75rem 2rem;
-        border-radius: 24px;
-        outline: none; 
-        color: #fff;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-      }
+    .bg-animation::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      bottom: -200px;
+      left: -200px;
+      animation: float 15s infinite ease-in-out reverse;
+    }
 
-      #form > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) translateX(0px);
       }
+      50% {
+        transform: translateY(-50px) translateX(30px);
+      }
+    }
 
-      #form > button:active {
+    /* Navbar */
+    .navbar {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 20px 40px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      animation: slideDown 0.5s ease;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
         transform: translateY(0);
       }
-
-      #messages { 
-        list-style-type: none; 
-        margin: 0; 
-        padding: 1rem;
-        max-width: 800px;
-        margin: 0 auto;
-      }
-
-      #messages > li { 
-        padding: 1rem 1.25rem;
-        margin-bottom: 0.5rem;
-        border-radius: 12px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        animation: slideIn 0.3s ease;
-        word-wrap: break-word;
-      }
-
-      #messages > li:nth-child(odd) { 
-        background: rgba(255, 255, 255, 0.95);
-      }
-
-      #messages > li:nth-child(even) { 
-        background: white;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @media (max-width: 600px) {
-        #form {
-          padding: 0.75rem;
-        }
-        
-        #form > button {
-          padding: 0.75rem 1.5rem;
-        }
-        
-        #messages {
-          padding: 0.75rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
-    </form>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io();
-
-  const form = document.getElementById('form');
-  const input = document.getElementById('input');
-  const messages = document.getElementById('messages');
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('chat message', input.value);
-      input.value = '';
     }
-  });
 
-  socket.on('chat message', (msg) => {
-    const item = document.createElement('li');
-    item.textContent = msg;
-    messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-</script>
-  </body>
+    .navbar-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+      font-size: 1.5em;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-brand:hover {
+      transform: translateY(-1px);
+    }
+
+    .navbar-brand-icon {
+      font-size: 1.5rem;
+    }
+
+    .navbar-menu {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .navbar-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-user:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-user:hover .user-avatar {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .navbar-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 50px;
+      color: white;
+      font-size: 1em;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .navbar-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .navbar-button.logout {
+      background: rgba(220, 38, 38, 0.8);
+    }
+
+    .navbar-button.logout:hover {
+      background: rgba(220, 38, 38, 1);
+    }
+
+    .navbar-button:active {
+      transform: translateY(0);
+    }
+
+    /* Messages Container */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 1rem;
+      background: transparent;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0 auto;
+      padding: 0;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    #messages > li {
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      animation: messageSlide 0.3s ease;
+      word-wrap: break-word;
+      color: #2d3748;
+      border-left: 3px solid #667eea;
+      font-size: 15px;
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+    }
+
+    #messages > li:nth-child(even) {
+      border-left-color: #764ba2;
+    }
+
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Form */
+    #form {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    #input {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 1rem 1.25rem;
+      flex-grow: 1;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.9);
+      color: #2d3748;
+    }
+
+    #input::placeholder {
+      color: #a0aec0;
+    }
+
+    #input:focus {
+      outline: none;
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+      background: white;
+    }
+
+    .form-wrapper > button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-wrapper > button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .form-wrapper > button:hover::before {
+      left: 100%;
+    }
+
+    .form-wrapper > button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .form-wrapper > button:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Scrollbar styling */
+    .messages-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 600px) {
+      .navbar {
+        padding: 1rem;
+      }
+
+      .navbar-brand {
+        font-size: 1.1rem;
+        padding: 0.375rem 0.75rem;
+      }
+
+      .navbar-brand-icon {
+        font-size: 1.5rem;
+      }
+
+      .navbar-menu {
+        gap: 0.75rem;
+      }
+
+      .navbar-user {
+        padding: 0.5rem 0.75rem;
+      }
+
+      .navbar-user span:not(.status-indicator) {
+        display: none;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+
+      .navbar-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 13px;
+      }
+
+      #form {
+        padding: 1rem;
+      }
+
+      .form-wrapper > button {
+        padding: 1rem 1.75rem;
+      }
+
+      .messages-container {
+        padding: 1rem 0.5rem;
+      }
+
+      #messages > li {
+        padding: 0.875rem 1rem;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="bg-animation"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="navbar-brand">
+        <span class="navbar-brand-icon">💬</span>
+        <span>Chat Room</span>
+      </a>
+      
+      <div class="navbar-menu">
+        <div class="navbar-user">
+          <span class="status-indicator"></span>
+          <span id="username">Loading...</span>
+          <div class="user-avatar" id="user-avatar">U</div>
+        </div>
+        <button class="navbar-button logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="messages-container">
+    <ul id="messages"></ul>
+  </div>
+
+  <form id="form" action="">
+    <div class="form-wrapper">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button type="submit">Send</button>
+    </div>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="../js/index.js"></script>
+  <script>
+    const socket = io();
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const messagesContainer = document.querySelector('.messages-container');
+    const usernameDisplay = document.getElementById('username');
+    const userAvatar = document.getElementById('user-avatar');
+
+    // Update username display and avatar when loaded
+    function updateUserDisplay(username) {
+      usernameDisplay.textContent = username;
+      userAvatar.textContent = username.charAt(0).toUpperCase();
+    }
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '/logout'; // Adjust this URL to your logout endpoint
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value.trim()) {
+        socket.emit('chat message', input.value);
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', (msg) => {
+      const item = document.createElement('li');
+      item.textContent = msg;
+      messages.appendChild(item);
+      messagesContainer.scrollTo(0, messagesContainer.scrollHeight);
+    });
+
+    // Example: Load username (replace with your actual logic)
+    // updateUserDisplay('JohnDoe');
+  </script>
+</body>
+
 </html>
