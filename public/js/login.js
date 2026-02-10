@@ -39,7 +39,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         }
 
         alert("Login successful");
-        // window.location.href = "/dashboard";
+        location.assign('/user/dashboard');
 
     } catch (err) {
         alert("Network error: " + err.message);

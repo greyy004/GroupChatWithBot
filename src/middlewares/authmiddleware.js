@@ -46,7 +46,6 @@ export const authLogin = (req, res, next) => {
     if (!/^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$/.test(email)) {
         return res.status(400).json({ message: "Please enter a valid email address." });
     }
-
     // Password validation
     if (password.length < 8) {
         return res.status(400).json({ message: "Password must be at least 8 characters." });
@@ -59,6 +58,15 @@ export const generateToken = (userData) => {
     return token;
 }
 
-export const validateJwt=()=>{
+export const requireAuth = (req, res, next) => {
+    const token = req.cookies.jwt;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-}
+    try {
+        const decoded = jwt.verify(token, process.env.secret_key);
+        req.user = decoded;
+        next();
+    } catch {
+        res.status(401).json({ message: "Invalid token" });
+    }
+};

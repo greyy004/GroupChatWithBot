@@ -27,7 +27,7 @@ export const createUser = async (firstname, lastname, email, hashed_password) =>
 
 export const getUserByEmail = async (email)=>{
     const user = await pool.query (
-        ` select id from users where email = $1`, [email]
+        ` select id, email, hashed_password from users where email = $1`, [email]
     );
     return user.rows[0];
 };
