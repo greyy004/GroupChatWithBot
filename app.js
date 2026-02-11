@@ -33,16 +33,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'landingpage.html'));
+  res.sendFile(path.join(__dirname, 'public', 'html', 'landingpage.html'));
 });
+
+const SendMsg='';
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 
-io.on('connection', (socket) => {
-  console.log('a user connected');
-   socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+io.on('connection',async (socket) => {
+  socket.on('chat message', async (msg, callback) => {
+    console.log("user connected");
+    console.log(msg);
+    callback({
+      status: 'ok'
+    });
+    try {
+    const response = await socket.timeout(5000).emitWithAck('chat message', msg);
+    console.log(response.status);
+  }catch(e)
+  {
+    console.log("didn't get acknowledgment from client", + e);
+  }
   });
   socket.on('disconnect', () => {
     console.log('user disconnected');
@@ -51,5 +63,5 @@ io.on('connection', (socket) => {
 
 // Start server
 server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });

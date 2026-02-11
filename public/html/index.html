@@ -471,19 +471,28 @@
       }
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit',async (e) => {
       e.preventDefault();
       if (input.value.trim()) {
-        socket.emit('chat message', input.value);
-        input.value = '';
+        try {
+          const response = await socket.timeout(5000).emitWithAck('chat message', input.value);
+          console.log(response.ok);
+          input.value='';
+        }catch(e)
+        {
+          console.log(e);
+        }
       }
     });
 
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', (msg, callback) => {
       const item = document.createElement('li');
       item.textContent = msg;
       messages.appendChild(item);
       messagesContainer.scrollTo(0, messagesContainer.scrollHeight);
+      callback({
+        status:'ok'
+      })
     });
 
     // Example: Load username (replace with your actual logic)

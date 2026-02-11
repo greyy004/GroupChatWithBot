@@ -28,7 +28,6 @@ export const userLogin = async (req, res) => {
             id: user.id
         });
         const maxAge =3* 24 * 60 * 60;
-        console.log(token);
         res.cookie('jwt', token, {
             httpOnly: true,
             maxAge: maxAge * 1000
